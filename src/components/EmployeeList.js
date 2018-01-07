@@ -1,19 +1,51 @@
+import _ from 'lodash';
 import React, { Component } from 'react';
-import { View, Text } from 'react-native';
+import { connect } from 'react-redux';
+import { ListView } from 'react-native';
+import EmployeeCard from './EmployeeCard';
+import { employeeFetch } from '../actions/';
 
 
 class EmployeeList extends Component {
+  componentWillMount() {
+    this.props.employeeFetch();
+    this.createDataSource(this.props);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.createDataSource(nextProps);
+  }
+
+  createDataSource(props) {
+    const { employeeList } = props;
+    const ds = new ListView.DataSource({
+      rowHasChanged: (r1, r2) => r1 !== r2
+    });
+    this.dataSource = ds.cloneWithRows(employeeList);
+  }
+
+  renderRow(employee) {
+    return (
+      <EmployeeCard employee={employee} />
+    );
+  }
+
   render() {
     return (
-      <View>
-        <Text>Employee List</Text>
-        <Text>Employee List</Text>
-        <Text>Employee List</Text>
-        <Text>Employee List</Text>
-        <Text>Employee List</Text>
-      </View>
+      <ListView
+        enableEmptySections
+        dataSource={this.dataSource}
+        renderRow={this.renderRow}
+      />
     );
   }
 }
 
-export default EmployeeList;
+const mapStateToProps = (state) => {
+  const employeeList = _.map(state.employeeList, (val, uid) => (
+      { ...val, uid })
+  );
+  return { employeeList };
+};
+
+export default connect(mapStateToProps, { employeeFetch })(EmployeeList);
